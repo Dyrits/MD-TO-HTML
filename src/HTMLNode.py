@@ -10,7 +10,7 @@ class HTMLNode:
     def to_html(self):
         raise NotImplementedError("Subclasses should implement this method")
 
-    def props_to_html(self):
+    def attributes_to_html(self):
         return ''.join(f' {key}="{value}"' for key, value in self.attributes.items())
 
     def __repr__(self):
