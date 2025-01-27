@@ -1,7 +1,7 @@
 import unittest
 
 from src.TextNode import TextNode, TextType
-from src.converters import text_node_to_html_node
+from src.converters import text_node_to_html_node, split_nodes_delimiter
 
 
 class TestTextNodeToHtmlNode(unittest.TestCase):
@@ -39,6 +39,48 @@ class TestTextNodeToHtmlNode(unittest.TestCase):
         text_node = TextNode("Invalid text", "INVALID")
         with self.assertRaises(ValueError):
             text_node_to_html_node(text_node)
+
+class TestSplitNodesDelimiter(unittest.TestCase):
+    def test_split_nodes_bold_delimiter(self):
+        old_nodes = ["This is **bold** text", "Another **bold** example"]
+        delimiter = "**"
+        text_type = TextType.BOLD
+        expected_nodes = [
+            TextNode("This is ", TextType.NORMAL),
+            TextNode("bold", TextType.BOLD),
+            TextNode(" text", TextType.NORMAL),
+            TextNode("Another ", TextType.NORMAL),
+            TextNode("bold", TextType.BOLD),
+            TextNode(" example", TextType.NORMAL)
+        ]
+        result = split_nodes_delimiter(old_nodes, delimiter, text_type)
+        self.assertEqual(result, expected_nodes)
+
+    def test_split_nodes_italic_delimiter(self):
+        old_nodes = ["This is *italic* text", "Another *italic* example"]
+        delimiter = "*"
+        text_type = TextType.ITALIC
+        expected_nodes = [
+            TextNode("This is ", TextType.NORMAL),
+            TextNode("italic", TextType.ITALIC),
+            TextNode(" text", TextType.NORMAL),
+            TextNode("Another ", TextType.NORMAL),
+            TextNode("italic", TextType.ITALIC),
+            TextNode(" example", TextType.NORMAL)
+        ]
+        result = split_nodes_delimiter(old_nodes, delimiter, text_type)
+        self.assertEqual(result, expected_nodes)
+
+    def test_no_delimiter(self):
+        old_nodes = ["This is normal text"]
+        delimiter = "**"
+        text_type = TextType.BOLD
+        with self.assertRaises(Exception) as context:
+            split_nodes_delimiter(old_nodes, delimiter, text_type)
+        self.assertTrue("The markdown is not well formatted." in str(context.exception))
+
+if __name__ == "__main__":
+    unittest.main()
 
 if __name__ == "__main__":
     unittest.main()
