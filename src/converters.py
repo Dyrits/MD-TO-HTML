@@ -1,3 +1,4 @@
+import re
 from enum import Enum
 
 from src.LeafNode import LeafNode
@@ -33,3 +34,11 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
             else:
                 nodes.append(TextNode(part, text_type))
     return nodes
+
+def extract_markdown_images(text):
+    expression = r"!\[(.*?)\]\((.*?)\)"
+    return re.findall(expression, text)
+
+def extract_markdown_links(text):
+    expression = r"\[(.*?)\]\((.*?)\)"
+    return re.findall(expression, text)

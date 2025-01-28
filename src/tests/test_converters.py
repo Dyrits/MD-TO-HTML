@@ -1,7 +1,8 @@
 import unittest
 
 from src.TextNode import TextNode, TextType
-from src.converters import text_node_to_html_node, split_nodes_delimiter
+from src.converters import text_node_to_html_node, split_nodes_delimiter, extract_markdown_links, \
+    extract_markdown_images
 
 
 class TestTextNodeToHtmlNode(unittest.TestCase):
@@ -79,8 +80,19 @@ class TestSplitNodesDelimiter(unittest.TestCase):
             split_nodes_delimiter(old_nodes, delimiter, text_type)
         self.assertTrue("The markdown is not well formatted." in str(context.exception))
 
-if __name__ == "__main__":
-    unittest.main()
+
+class TestExtractMarkdown(unittest.TestCase):
+    def test_extract_markdown_links(self):
+        text = "This is text with a [link to boot dev](https://www.boot.dev) and to [youtube](https://www.youtube.com)"
+        expected_links = [("link to boot dev", "https://www.boot.dev"), ("youtube", "https://www.youtube.com")]
+        result = extract_markdown_links(text)
+        self.assertEqual(result, expected_links)
+
+    def test_extract_markdown_images(self):
+        text = 'This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)'
+        expected_images = [("rick roll", "https://i.imgur.com/aKaOqIh.gif"), ("obi wan", "https://i.imgur.com/fJRm4Vk.jpeg")]
+        result = extract_markdown_images(text)
+        self.assertEqual(result, expected_images)
 
 if __name__ == "__main__":
     unittest.main()
