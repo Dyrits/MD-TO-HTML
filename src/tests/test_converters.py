@@ -2,7 +2,7 @@ import unittest
 
 from src.TextNode import TextNode, TextType
 from src.converters import text_node_to_html_node, split_nodes_delimiter, extract_markdown_links, \
-    extract_markdown_images
+    extract_markdown_images, split_nodes_link, split_nodes_images
 
 
 class TestTextNodeToHtmlNode(unittest.TestCase):
@@ -93,6 +93,38 @@ class TestExtractMarkdown(unittest.TestCase):
         expected_images = [("rick roll", "https://i.imgur.com/aKaOqIh.gif"), ("obi wan", "https://i.imgur.com/fJRm4Vk.jpeg")]
         result = extract_markdown_images(text)
         self.assertEqual(result, expected_images)
+
+class TestSplitNodes(unittest.TestCase):
+    def test_split_nodes_link(self):
+        node = TextNode(
+            "This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)",
+            TextType.NORMAL,
+        )
+        expected_nodes = [
+            TextNode("This is text with a link ", TextType.NORMAL),
+            TextNode("to boot dev", TextType.LINK, "https://www.boot.dev"),
+            TextNode(" and ", TextType.NORMAL),
+            TextNode("to youtube", TextType.LINK, "https://www.youtube.com/@bootdotdev"),
+        ]
+        result = split_nodes_link([node])
+        self.assertEqual(result, expected_nodes)
+
+    def test_split_nodes_images(self):
+        node = TextNode(
+            'This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)',
+            TextType.NORMAL,
+        )
+        expected_nodes = [
+            TextNode("This is text with a ", TextType.NORMAL),
+            TextNode("rick roll", TextType.IMAGE, "https://i.imgur.com/aKaOqIh.gif"),
+            TextNode(" and ", TextType.NORMAL),
+            TextNode("obi wan", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
+        ]
+        result = split_nodes_images([node])
+        self.assertEqual(result, expected_nodes)
+
+if __name__ == "__main__":
+    unittest.main()
 
 if __name__ == "__main__":
     unittest.main()
