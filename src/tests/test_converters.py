@@ -2,7 +2,7 @@ import unittest
 
 from src.TextNode import TextNode, TextType
 from src.converters import text_node_to_html_node, split_nodes_delimiter, extract_markdown_links, \
-    extract_markdown_images, split_nodes_link, split_nodes_images
+    extract_markdown_images, split_nodes_link, split_nodes_images, text_to_textnodes
 
 
 class TestTextNodeToHtmlNode(unittest.TestCase):
@@ -43,7 +43,7 @@ class TestTextNodeToHtmlNode(unittest.TestCase):
 
 class TestSplitNodesDelimiter(unittest.TestCase):
     def test_split_nodes_bold_delimiter(self):
-        old_nodes = ["This is **bold** text", "Another **bold** example"]
+        old_nodes = [TextNode("This is **bold** text", TextType.NORMAL), TextNode("Another **bold** example", TextType.NORMAL)]
         delimiter = "**"
         text_type = TextType.BOLD
         expected_nodes = [
@@ -58,7 +58,7 @@ class TestSplitNodesDelimiter(unittest.TestCase):
         self.assertEqual(result, expected_nodes)
 
     def test_split_nodes_italic_delimiter(self):
-        old_nodes = ["This is *italic* text", "Another *italic* example"]
+        old_nodes = [TextNode("This is *italic* text", TextType.NORMAL), TextNode("Another *italic* example", TextType.NORMAL)]
         delimiter = "*"
         text_type = TextType.ITALIC
         expected_nodes = [
@@ -72,13 +72,13 @@ class TestSplitNodesDelimiter(unittest.TestCase):
         result = split_nodes_delimiter(old_nodes, delimiter, text_type)
         self.assertEqual(result, expected_nodes)
 
-    def test_no_delimiter(self):
-        old_nodes = ["This is normal text"]
+    def test_not_closed_delimiter(self):
+        old_nodes = [TextNode("This is **bold text", TextType.NORMAL)]
         delimiter = "**"
         text_type = TextType.BOLD
         with self.assertRaises(Exception) as context:
             split_nodes_delimiter(old_nodes, delimiter, text_type)
-        self.assertTrue("The markdown is not well formatted." in str(context.exception))
+        self.assertTrue("Invalid markdown, formatted section not closed." in str(context.exception))
 
 
 class TestExtractMarkdown(unittest.TestCase):
@@ -121,6 +121,42 @@ class TestSplitNodes(unittest.TestCase):
             TextNode("obi wan", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
         ]
         result = split_nodes_images([node])
+        self.assertEqual(result, expected_nodes)
+
+class TestTextToTextNodes(unittest.TestCase):
+    def test_text_to_textnodes(self):
+        text = "This is **text** with an *italic* word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
+        expected_nodes = [
+            TextNode("This is ", TextType.NORMAL),
+            TextNode("text", TextType.BOLD),
+            TextNode(" with an ", TextType.NORMAL),
+            TextNode("italic", TextType.ITALIC),
+            TextNode(" word and a ", TextType.NORMAL),
+            TextNode("code block", TextType.CODE),
+            TextNode(" and an ", TextType.NORMAL),
+            TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
+            TextNode(" and a ", TextType.NORMAL),
+            TextNode("link", TextType.LINK, "https://boot.dev"),
+        ]
+        result = text_to_textnodes(text)
+        self.assertEqual(result, expected_nodes)
+
+    def test_text_to_textnodes_no_formatting(self):
+        text = "This is text with no formatting"
+        expected_nodes = [TextNode("This is text with no formatting", TextType.NORMAL)]
+        result = text_to_textnodes(text)
+        self.assertEqual(result, expected_nodes)
+
+    def test_text_to_textnodes_no_formatting_with_link(self):
+        text = "This is text with a [link](https://boot.dev)"
+        expected_nodes = [TextNode("This is text with a ", TextType.NORMAL), TextNode("link", TextType.LINK, "https://boot.dev")]
+        result = text_to_textnodes(text)
+        self.assertEqual(result, expected_nodes)
+
+    def test_text_to_textnodes_no_formatting_with_image(self):
+        text = "This is text with an ![image](https://i.imgur.com/fJRm4Vk.jpeg)"
+        expected_nodes = [TextNode("This is text with an ", TextType.NORMAL), TextNode("image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg")]
+        result = text_to_textnodes(text)
         self.assertEqual(result, expected_nodes)
 
 if __name__ == "__main__":

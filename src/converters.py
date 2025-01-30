@@ -4,7 +4,6 @@ from enum import Enum
 from src.LeafNode import LeafNode
 from src.TextNode import TextType, TextNode
 
-
 def text_node_to_html_node(text_node):
     match text_node.type:
         case TextType.NORMAL:
@@ -25,9 +24,12 @@ def text_node_to_html_node(text_node):
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
     nodes = []
     for old_node in old_nodes:
-        if delimiter not in old_node:
-            raise Exception("The markdown is not well formatted.")
-        parts = old_node.split(delimiter)
+        if old_node.type is not TextType.NORMAL:
+            nodes.append(old_node)
+            continue
+        parts = old_node.text.split(delimiter)
+        if len(parts) % 2 == 0:
+            raise ValueError("Invalid markdown, formatted section not closed.")
         for index, part in enumerate(parts):
             if index % 2 == 0:
                 nodes.append(TextNode(part, TextType.NORMAL))
@@ -48,9 +50,8 @@ def split_nodes_by_type(old_nodes, extract_function, text_type):
     for old_node in old_nodes:
         items = extract_function(old_node.text)
         if not items:
-            nodes.append(TextNode(old_node.text, TextType.NORMAL))
+            nodes.append(old_node)
             continue
-
         parts = re.split({TextType.LINK: r"(\[.*?\]\(.*?\))", TextType.IMAGE: r"(!\[.*?\]\(.*?\))"}[text_type], old_node.text)
         for part in parts:
             if part:  # Ensure part is not empty
@@ -67,3 +68,18 @@ def split_nodes_images(old_nodes):
 
 def split_nodes_link(old_nodes):
     return split_nodes_by_type(old_nodes, extract_markdown_links, TextType.LINK)
+
+
+def text_to_textnodes(text):
+    nodes = [TextNode(text, TextType.NORMAL)]
+    # Split nodes by bold (**)
+    nodes = split_nodes_delimiter(nodes, "**", TextType.BOLD)
+    # Split nodes by italic (*)
+    nodes = split_nodes_delimiter(nodes, "*", TextType.ITALIC)
+    # Split nodes by code (`)
+    nodes = split_nodes_delimiter(nodes, "`", TextType.CODE)
+    # Split nodes by images (![...](...))
+    nodes = split_nodes_images(nodes)
+    # Split nodes by links ([...](...))
+    nodes = split_nodes_link(nodes)
+    return nodes
