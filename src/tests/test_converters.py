@@ -2,7 +2,7 @@ import unittest
 
 from src.TextNode import TextNode, TextType
 from src.converters import text_node_to_html_node, split_nodes_delimiter, extract_markdown_links, \
-    extract_markdown_images, split_nodes_link, split_nodes_images, text_to_textnodes
+    extract_markdown_images, split_nodes_link, split_nodes_images, text_to_textnodes, markdown_to_blocks
 
 
 class TestTextNodeToHtmlNode(unittest.TestCase):
@@ -158,6 +158,25 @@ class TestTextToTextNodes(unittest.TestCase):
         expected_nodes = [TextNode("This is text with an ", TextType.NORMAL), TextNode("image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg")]
         result = text_to_textnodes(text)
         self.assertEqual(result, expected_nodes)
+
+class TestMarkdownToBlocks(unittest.TestCase):
+    def test_markdown_to_blocks(self):
+        markdown = ("# This is a heading" "\n"
+                    "This is a paragraph of text. It has some **bold** and *italic* words inside of it." "\n"
+                    "* This is the first list item in a list block" "\n"
+                    "* This is a list item" "\n"
+                    "* This is another list item")
+
+        expected_blocks = [
+            "# This is a heading",
+            "This is a paragraph of text. It has some **bold** and *italic* words inside of it.",
+            "* This is the first list item in a list block",
+            "* This is a list item",
+            "* This is another list item"
+        ]
+
+        result = markdown_to_blocks(markdown)
+        self.assertEqual(result, expected_blocks)
 
 if __name__ == "__main__":
     unittest.main()

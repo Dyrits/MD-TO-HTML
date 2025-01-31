@@ -83,3 +83,6 @@ def text_to_textnodes(text):
     # Split nodes by links ([...](...))
     nodes = split_nodes_link(nodes)
     return nodes
+
+def markdown_to_blocks(markdown):
+    return [line for line in markdown.split("\n") if len(line) != 0]
