@@ -3,6 +3,17 @@ from enum import Enum
 
 from src.LeafNode import LeafNode
 from src.TextNode import TextType, TextNode
+from src.splitters import split_nodes_delimiter, split_nodes_images, split_nodes_link
+
+
+class BlockType(Enum):
+    Paragraph = "paragraph"
+    Heading = "heading"
+    Code = "code"
+    Quote = "quote"
+    UnorderedList = "unordered_list"
+    OrderedList = "ordered_list"
+
 
 def text_node_to_html_node(text_node):
     match text_node.type:
@@ -21,55 +32,6 @@ def text_node_to_html_node(text_node):
         case _:
             raise ValueError("Invalid TextType")
 
-def split_nodes_delimiter(old_nodes, delimiter, text_type):
-    nodes = []
-    for old_node in old_nodes:
-        if old_node.type is not TextType.NORMAL:
-            nodes.append(old_node)
-            continue
-        parts = old_node.text.split(delimiter)
-        if len(parts) % 2 == 0:
-            raise ValueError("Invalid markdown, formatted section not closed.")
-        for index, part in enumerate(parts):
-            if index % 2 == 0:
-                nodes.append(TextNode(part, TextType.NORMAL))
-            else:
-                nodes.append(TextNode(part, text_type))
-    return nodes
-
-def extract_markdown_images(text):
-    expression = r"!\[(.*?)\]\((.*?)\)"
-    return re.findall(expression, text)
-
-def extract_markdown_links(text):
-    expression = r"\[(.*?)\]\((.*?)\)"
-    return re.findall(expression, text)
-
-def split_nodes_by_type(old_nodes, extract_function, text_type):
-    nodes = []
-    for old_node in old_nodes:
-        items = extract_function(old_node.text)
-        if not items:
-            nodes.append(old_node)
-            continue
-        parts = re.split({TextType.LINK: r"(\[.*?\]\(.*?\))", TextType.IMAGE: r"(!\[.*?\]\(.*?\))"}[text_type], old_node.text)
-        for part in parts:
-            if part:  # Ensure part is not empty
-                items = extract_function(part)
-                if items:
-                    for item_text, item_url in items:
-                        nodes.append(TextNode(item_text, text_type, item_url))
-                else:
-                    nodes.append(TextNode(part, TextType.NORMAL))
-    return nodes
-
-def split_nodes_images(old_nodes):
-    return split_nodes_by_type(old_nodes, extract_markdown_images, TextType.IMAGE)
-
-def split_nodes_link(old_nodes):
-    return split_nodes_by_type(old_nodes, extract_markdown_links, TextType.LINK)
-
-
 def text_to_textnodes(text):
     nodes = [TextNode(text, TextType.NORMAL)]
     # Split nodes by bold (**)
@@ -86,3 +48,16 @@ def text_to_textnodes(text):
 
 def markdown_to_blocks(markdown):
     return [line for line in markdown.split("\n") if len(line) != 0]
+
+def block_to_block_type(block):
+    if block.startswith("#"):
+        return BlockType.Heading
+    if block.startswith("```") and block.endswith("```"):
+        return BlockType.Code
+    if block.startswith(">"):
+        return BlockType.Quote
+    if block.startswith("- ") or block.startswith("* "):
+        return BlockType.UnorderedList
+    if re.match(r"^\d+\.", block):
+        return BlockType.OrderedList
+    return "paragraph"

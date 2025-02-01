@@ -1,8 +1,7 @@
 import unittest
 
 from src.TextNode import TextNode, TextType
-from src.converters import text_node_to_html_node, split_nodes_delimiter, extract_markdown_links, \
-    extract_markdown_images, split_nodes_link, split_nodes_images, text_to_textnodes, markdown_to_blocks
+from src.converters import text_node_to_html_node, text_to_textnodes, markdown_to_blocks, block_to_block_type, BlockType
 
 
 class TestTextNodeToHtmlNode(unittest.TestCase):
@@ -41,87 +40,6 @@ class TestTextNodeToHtmlNode(unittest.TestCase):
         with self.assertRaises(ValueError):
             text_node_to_html_node(text_node)
 
-class TestSplitNodesDelimiter(unittest.TestCase):
-    def test_split_nodes_bold_delimiter(self):
-        old_nodes = [TextNode("This is **bold** text", TextType.NORMAL), TextNode("Another **bold** example", TextType.NORMAL)]
-        delimiter = "**"
-        text_type = TextType.BOLD
-        expected_nodes = [
-            TextNode("This is ", TextType.NORMAL),
-            TextNode("bold", TextType.BOLD),
-            TextNode(" text", TextType.NORMAL),
-            TextNode("Another ", TextType.NORMAL),
-            TextNode("bold", TextType.BOLD),
-            TextNode(" example", TextType.NORMAL)
-        ]
-        result = split_nodes_delimiter(old_nodes, delimiter, text_type)
-        self.assertEqual(result, expected_nodes)
-
-    def test_split_nodes_italic_delimiter(self):
-        old_nodes = [TextNode("This is *italic* text", TextType.NORMAL), TextNode("Another *italic* example", TextType.NORMAL)]
-        delimiter = "*"
-        text_type = TextType.ITALIC
-        expected_nodes = [
-            TextNode("This is ", TextType.NORMAL),
-            TextNode("italic", TextType.ITALIC),
-            TextNode(" text", TextType.NORMAL),
-            TextNode("Another ", TextType.NORMAL),
-            TextNode("italic", TextType.ITALIC),
-            TextNode(" example", TextType.NORMAL)
-        ]
-        result = split_nodes_delimiter(old_nodes, delimiter, text_type)
-        self.assertEqual(result, expected_nodes)
-
-    def test_not_closed_delimiter(self):
-        old_nodes = [TextNode("This is **bold text", TextType.NORMAL)]
-        delimiter = "**"
-        text_type = TextType.BOLD
-        with self.assertRaises(Exception) as context:
-            split_nodes_delimiter(old_nodes, delimiter, text_type)
-        self.assertTrue("Invalid markdown, formatted section not closed." in str(context.exception))
-
-
-class TestExtractMarkdown(unittest.TestCase):
-    def test_extract_markdown_links(self):
-        text = "This is text with a [link to boot dev](https://www.boot.dev) and to [youtube](https://www.youtube.com)"
-        expected_links = [("link to boot dev", "https://www.boot.dev"), ("youtube", "https://www.youtube.com")]
-        result = extract_markdown_links(text)
-        self.assertEqual(result, expected_links)
-
-    def test_extract_markdown_images(self):
-        text = 'This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)'
-        expected_images = [("rick roll", "https://i.imgur.com/aKaOqIh.gif"), ("obi wan", "https://i.imgur.com/fJRm4Vk.jpeg")]
-        result = extract_markdown_images(text)
-        self.assertEqual(result, expected_images)
-
-class TestSplitNodes(unittest.TestCase):
-    def test_split_nodes_link(self):
-        node = TextNode(
-            "This is text with a link [to boot dev](https://www.boot.dev) and [to youtube](https://www.youtube.com/@bootdotdev)",
-            TextType.NORMAL,
-        )
-        expected_nodes = [
-            TextNode("This is text with a link ", TextType.NORMAL),
-            TextNode("to boot dev", TextType.LINK, "https://www.boot.dev"),
-            TextNode(" and ", TextType.NORMAL),
-            TextNode("to youtube", TextType.LINK, "https://www.youtube.com/@bootdotdev"),
-        ]
-        result = split_nodes_link([node])
-        self.assertEqual(result, expected_nodes)
-
-    def test_split_nodes_images(self):
-        node = TextNode(
-            'This is text with a ![rick roll](https://i.imgur.com/aKaOqIh.gif) and ![obi wan](https://i.imgur.com/fJRm4Vk.jpeg)',
-            TextType.NORMAL,
-        )
-        expected_nodes = [
-            TextNode("This is text with a ", TextType.NORMAL),
-            TextNode("rick roll", TextType.IMAGE, "https://i.imgur.com/aKaOqIh.gif"),
-            TextNode(" and ", TextType.NORMAL),
-            TextNode("obi wan", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
-        ]
-        result = split_nodes_images([node])
-        self.assertEqual(result, expected_nodes)
 
 class TestTextToTextNodes(unittest.TestCase):
     def test_text_to_textnodes(self):
@@ -177,6 +95,35 @@ class TestMarkdownToBlocks(unittest.TestCase):
 
         result = markdown_to_blocks(markdown)
         self.assertEqual(result, expected_blocks)
+
+
+class TestBlockToBlockType(unittest.TestCase):
+    def test_heading_block(self):
+        block = "# This is a heading"
+        self.assertEqual(block_to_block_type(block), BlockType.Heading)
+
+    def test_code_block(self):
+        block = "```let x = 5;```"
+        self.assertEqual(block_to_block_type(block), BlockType.Code)
+
+    def test_quote_block(self):
+        block = "> This is a quote"
+        self.assertEqual(block_to_block_type(block), BlockType.Quote)
+
+    def test_unordered_list_block(self):
+        block = "* This is an unordered list item"
+        self.assertEqual(block_to_block_type(block), BlockType.UnorderedList)
+
+    def test_ordered_list_block(self):
+        block = "5. This is an ordered list item"
+        self.assertEqual(block_to_block_type(block), BlockType.OrderedList)
+
+    def test_paragraph_block(self):
+        block = "This is a paragraph"
+        self.assertEqual(block_to_block_type(block), "paragraph")
+
+if __name__ == '__main__':
+    unittest.main()
 
 if __name__ == "__main__":
     unittest.main()
