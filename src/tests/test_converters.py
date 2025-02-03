@@ -1,7 +1,10 @@
 import unittest
 
+from src.LeafNode import LeafNode
+from src.ParentNode import ParentNode
 from src.TextNode import TextNode, TextType
-from src.converters import text_node_to_html_node, text_to_textnodes, markdown_to_blocks, block_to_block_type, BlockType
+from src.converters import text_node_to_html_node, text_to_textnodes, markdown_to_blocks, block_to_block_type, \
+    BlockType, markdown_to_html_node
 
 
 class TestTextNodeToHtmlNode(unittest.TestCase):
@@ -120,7 +123,49 @@ class TestBlockToBlockType(unittest.TestCase):
 
     def test_paragraph_block(self):
         block = "This is a paragraph"
-        self.assertEqual(block_to_block_type(block), "paragraph")
+        self.assertEqual(block_to_block_type(block), BlockType.Paragraph)
+
+class TestMarkdownToHtmlNode(unittest.TestCase):
+    def test_markdown_to_html_node(self):
+        markdown = ("# Heading 1\n"
+                    "## Heading 2\n"
+                    "### Heading 3\n"
+                    "This is a paragraph with **bold** and *italic* text.\n"
+                    "> This is a quote.\n"
+                    "* Unordered list item 1\n"
+                    "* Unordered list item 2\n"
+                    "1. Ordered list item 1\n"
+                    "2. Ordered list item 2\n"
+                    "```Code block```"
+                    )
+
+        expected_html_node = ParentNode(tag="div", children=[
+            LeafNode(tag="h1", value="Heading 1"),
+            LeafNode(tag="h2", value="Heading 2"),
+            LeafNode(tag="h3", value="Heading 3"),
+            ParentNode(tag="p", children=[
+                LeafNode(tag=None, value="This is a paragraph with "),
+                LeafNode(tag="b", value="bold"),
+                LeafNode(tag=None, value=" and "),
+                LeafNode(tag="i", value="italic"),
+                LeafNode(tag=None, value=" text.")
+            ]),
+            LeafNode(tag="blockquote", value="This is a quote."),
+            ParentNode(tag="ul", children=[
+                LeafNode(tag="li", value="Unordered list item 1"),
+                LeafNode(tag="li", value="Unordered list item 2")
+            ]),
+            ParentNode(tag="ol", children=[
+                LeafNode(tag="li", value="Ordered list item 1"),
+                LeafNode(tag="li", value="Ordered list item 2")
+            ]),
+            ParentNode(tag="pre", children=[
+                LeafNode(tag="code", value="Code block")
+            ])
+        ])
+
+        result = markdown_to_html_node(markdown)
+        self.assertEqual(result, expected_html_node)
 
 if __name__ == '__main__':
     unittest.main()
