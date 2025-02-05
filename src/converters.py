@@ -1,11 +1,11 @@
 import re
 from enum import Enum
 
-from src.HTMLNode import HTMLNode
-from src.LeafNode import LeafNode
-from src.ParentNode import ParentNode
-from src.TextNode import TextType, TextNode
-from src.splitters import split_nodes_delimiter, split_nodes_images, split_nodes_link
+from HTMLNode import HTMLNode
+from LeafNode import LeafNode
+from ParentNode import ParentNode
+from TextNode import TextType, TextNode
+from splitters import split_nodes_delimiter, split_nodes_images, split_nodes_link
 
 
 class BlockType(Enum):
@@ -96,12 +96,14 @@ def markdown_to_html_node(markdown):
                 if unordered_list is None:
                     unordered_list = ParentNode(tag="ul", children=[])
                 text = block[2:].strip()
-                unordered_list.children.append(LeafNode(tag="li", value=text))
+                text_nodes = text_to_textnodes(text)
+                unordered_list.children.append(ParentNode(tag="li", children=[text_node_to_html_node(node) for node in text_nodes]))
             case BlockType.OrderedList:
                 if ordered_list is None:
                     ordered_list = ParentNode(tag="ol", children=[])
                 text = block[2:].strip()
-                ordered_list.children.append(LeafNode(tag="li", value=text))
+                text_nodes = text_to_textnodes(text)
+                ordered_list.children.append(ParentNode(tag="li", children=[text_node_to_html_node(node) for node in text_nodes]))
             case BlockType.Paragraph:
                 text_nodes = text_to_textnodes(block)
                 parent.children.append(ParentNode(tag="p", children=[text_node_to_html_node(node) for node in text_nodes]))

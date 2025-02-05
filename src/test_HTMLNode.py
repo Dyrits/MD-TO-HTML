@@ -1,6 +1,6 @@
 import unittest
 
-from src.HTMLNode import HTMLNode
+from HTMLNode import HTMLNode
 
 class TestHTMLNode(unittest.TestCase):
     def test_attributes_to_html(self):

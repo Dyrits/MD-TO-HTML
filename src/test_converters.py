@@ -1,9 +1,9 @@
 import unittest
 
-from src.LeafNode import LeafNode
-from src.ParentNode import ParentNode
-from src.TextNode import TextNode, TextType
-from src.converters import text_node_to_html_node, text_to_textnodes, markdown_to_blocks, block_to_block_type, \
+from LeafNode import LeafNode
+from ParentNode import ParentNode
+from TextNode import TextNode, TextType
+from converters import text_node_to_html_node, text_to_textnodes, markdown_to_blocks, block_to_block_type, \
     BlockType, markdown_to_html_node
 
 
@@ -152,12 +152,20 @@ class TestMarkdownToHtmlNode(unittest.TestCase):
             ]),
             LeafNode(tag="blockquote", value="This is a quote."),
             ParentNode(tag="ul", children=[
-                LeafNode(tag="li", value="Unordered list item 1"),
-                LeafNode(tag="li", value="Unordered list item 2")
+                ParentNode(tag="li", children=[
+                    LeafNode(tag=None, value="Unordered list item 1")
+                ]),
+                ParentNode(tag="li", children=[
+                    LeafNode(tag=None, value="Unordered list item 2")
+                ])
             ]),
             ParentNode(tag="ol", children=[
-                LeafNode(tag="li", value="Ordered list item 1"),
-                LeafNode(tag="li", value="Ordered list item 2")
+                ParentNode(tag="li", children=[
+                    LeafNode(tag=None, value="Ordered list item 1")
+                ]),
+                ParentNode(tag="li", children=[
+                    LeafNode(tag=None, value="Ordered list item 2")
+                ])
             ]),
             ParentNode(tag="pre", children=[
                 LeafNode(tag="code", value="Code block")
